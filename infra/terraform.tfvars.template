@@ -1,0 +1,30 @@
+# Terraform variables template for Get started tutorial
+# Copy this file to terraform.tfvars and fill in your values
+
+# =====================
+# CLOUD PROVIDER CHOICE
+# =====================
+
+# Which cloud provider to enable (choose one)
+# Options: "aws", "gcp"
+enabled_cloud_provider = "..."
+
+# ================================
+# AWS configuration (if using AWS)
+# ================================
+
+# AWS region for resources, e.g. "eu-north-1"
+aws_region = "..."
+
+# Your AWS profile name (optional - uses default if not specified)
+# aws_profile = "..."
+
+# ================================
+# GCP configuration (if using GCP)
+# ================================
+
+# GCP project ID, e.g. "your-gcp-project-id"
+gcp_project_id = "..."
+
+# GCP region for resources, e.g. "europe-west3"
+gcp_region = "..."
