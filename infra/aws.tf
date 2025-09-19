@@ -1,8 +1,11 @@
 provider "aws" {
   region = var.aws_region
 }
+
+data "aws_caller_identity" "current" {}
+
 locals {
-  create_aws = var.enabled_cloud_provider == "aws"
+  create_aws   = var.enabled_cloud_provider == "aws"
   cluster_name = "get-started-eks"
 }
 data "aws_availability_zones" "available" {
@@ -38,16 +41,53 @@ resource "aws_subnet" "subnet" {
   }
 }
 
-# EKS auto cluster
-resource "aws_eks_cluster" "exget-startedample" {
+# Internet Gateway for routing traffic to the internet. Required for image pull from public source
+resource "aws_internet_gateway" "igw" {
   count = local.create_aws ? 1 : 0
-  name = "${local.cluster_name}"
 
-  access_config {
-    authentication_mode = "API"
+  vpc_id = aws_vpc.vpc[0].id
+
+  tags = {
+    Name = "get-started-igw"
+  }
+}
+
+
+# Route Table
+resource "aws_route_table" "main" {
+  count = local.create_aws ? 1 : 0
+
+  vpc_id = aws_vpc.vpc[0].id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw[0].id
   }
 
-  role_arn = aws_iam_role.cluster[0].arn
+  tags = {
+    Name = "get-started-rt"
+  }
+}
+
+resource "aws_route_table_association" "main" {
+  count = local.create_aws ? 2 : 0
+
+  subnet_id      = aws_subnet.subnet[count.index].id
+  route_table_id = aws_route_table.main[0].id
+}
+
+
+# EKS auto cluster
+resource "aws_eks_cluster" "get-started" {
+  count = local.create_aws ? 1 : 0
+  name  = local.cluster_name
+
+  access_config {
+    authentication_mode                         = "API"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+
+  role_arn                      = aws_iam_role.cluster[0].arn
   bootstrap_self_managed_addons = false
 
   compute_config {
@@ -87,9 +127,25 @@ resource "aws_eks_cluster" "exget-startedample" {
   ]
 }
 
+resource "aws_eks_access_entry" "access" {
+  cluster_name  = aws_eks_cluster.get-started[0].name
+  principal_arn = data.aws_caller_identity.current.arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "admin" {
+  cluster_name  = aws_eks_cluster.get-started[0].name
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+  principal_arn = data.aws_caller_identity.current.arn
+
+  access_scope {
+    type = "cluster"
+  }
+}
+
 resource "aws_iam_role" "node" {
   count = local.create_aws ? 1 : 0
-  name = "eks-auto-node-example"
+  name  = "eks-auto-node-example"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -105,20 +161,20 @@ resource "aws_iam_role" "node" {
 }
 
 resource "aws_iam_role_policy_attachment" "node_AmazonEKSWorkerNodeMinimalPolicy" {
-  count = local.create_aws ? 1 : 0
+  count      = local.create_aws ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy"
   role       = aws_iam_role.node[0].name
 }
 
 resource "aws_iam_role_policy_attachment" "node_AmazonEC2ContainerRegistryPullOnly" {
-  count = local.create_aws ? 1 : 0
+  count      = local.create_aws ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
   role       = aws_iam_role.node[0].name
 }
 
 resource "aws_iam_role" "cluster" {
   count = local.create_aws ? 1 : 0
-  name = "eks-cluster-example"
+  name  = "eks-cluster-example"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -137,31 +193,31 @@ resource "aws_iam_role" "cluster" {
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
-  count = local.create_aws ? 1 : 0
+  count      = local.create_aws ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
   role       = aws_iam_role.cluster[0].name
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSComputePolicy" {
-  count = local.create_aws ? 1 : 0
+  count      = local.create_aws ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSComputePolicy"
   role       = aws_iam_role.cluster[0].name
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSBlockStoragePolicy" {
-  count = local.create_aws ? 1 : 0
+  count      = local.create_aws ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSBlockStoragePolicy"
   role       = aws_iam_role.cluster[0].name
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSLoadBalancingPolicy" {
-  count = local.create_aws ? 1 : 0
+  count      = local.create_aws ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSLoadBalancingPolicy"
   role       = aws_iam_role.cluster[0].name
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSNetworkingPolicy" {
-  count = local.create_aws ? 1 : 0
+  count      = local.create_aws ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSNetworkingPolicy"
   role       = aws_iam_role.cluster[0].name
 }
