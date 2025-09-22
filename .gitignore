@@ -39,3 +39,6 @@ terraform.rc
 
 # Ignore key files
 *.pem
+
+# Local manifests directory
+manifests/
