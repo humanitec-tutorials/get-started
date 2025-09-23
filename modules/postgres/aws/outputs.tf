@@ -39,10 +39,10 @@ output "humanitec_metadata" {
       "Database" = local.db_name
     },
     {
-      "Region" = data.aws_region.current.name
+      "Region" = data.aws_region.current.region
     },
     {
-      "AWS console URL" = "https://${data.aws_region.current.name}.console.aws.amazon.com/rds/home?region=${data.aws_region.current.name}#database:id=${aws_db_instance.get_started_rds_postgres_instance.identifier}"
+      "AWS console URL" = "https://${data.aws_region.current.region}.console.aws.amazon.com/rds/home?region=${data.aws_region.current.region}#database:id=${aws_db_instance.get_started_rds_postgres_instance.identifier}"
     }
   )
 }
