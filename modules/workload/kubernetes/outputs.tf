@@ -1,5 +1,5 @@
 output "humanitec_metadata" {
-  description = "Metadata for Humanitec."
+  description = "Metadata for the Orchestrator"
   value = merge(
     {
       "Namespace" = var.namespace

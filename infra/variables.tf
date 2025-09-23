@@ -13,7 +13,7 @@ variable "gcp_region" {
 
 # Added through tutorial
 variable "orchestrator_org" {
-  description = "Ochestrator organization name"
+  description = "Ochestrator organization ID"
 }
 
 # Added through tutorial
