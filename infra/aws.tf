@@ -76,7 +76,6 @@ resource "aws_route_table_association" "main" {
   route_table_id = aws_route_table.main[0].id
 }
 
-
 # EKS auto cluster
 resource "aws_eks_cluster" "get-started" {
   count = local.create_aws ? 1 : 0
@@ -220,4 +219,47 @@ resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSNetworkingPolicy" {
   count      = local.create_aws ? 1 : 0
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSNetworkingPolicy"
   role       = aws_iam_role.cluster[0].name
+}
+
+### AWS Pod Identity for the runner
+# Install the Pod Identity add-on to the cluster
+resource "aws_eks_addon" "pod_identity" {
+  cluster_name = aws_eks_cluster.get-started[0].name
+  addon_name   = "eks-pod-identity-agent"
+}
+
+# Policy document for Pod Identity
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    sid    = "AllowEksAuthToAssumeRoleForPodIdentity"
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["pods.eks.amazonaws.com"]
+    }
+    actions = [
+      "sts:AssumeRole",
+      "sts:TagSession"
+    ]
+  }
+}
+
+# IAM role for the runner
+resource "aws_iam_role" "agent_runner_workload_identity_role" {
+  name               = "get-started-humanitec-kubernetes-agent-runner"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+# IAM role policy attachment to a built-in role
+resource "aws_iam_role_policy_attachment" "agent_runner_manage_rds" {
+  role       = aws_iam_role.agent_runner_workload_identity_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
+}
+
+# EKS Pod Identity association for the agent runner service account to the IAM role
+resource "aws_eks_pod_identity_association" "agent_runner" {
+  cluster_name    = aws_eks_cluster.get-started[0].name
+  namespace       = kubernetes_namespace.humanitec_kubernetes_agent_runner.metadata[0].name
+  service_account = "humanitec-kubernetes-agent-runner"
+  role_arn        = aws_iam_role.agent_runner_workload_identity_role.arn
 }
