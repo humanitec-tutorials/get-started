@@ -4,7 +4,7 @@ output "identifier" {
 output "arn" {
   value = aws_db_instance.get_started_rds_postgres_instance.arn
 }
-output "address" {
+output "host" {
   value = aws_db_instance.get_started_rds_postgres_instance.address
 }
 output "port" {
@@ -30,7 +30,7 @@ output "humanitec_metadata" {
       "Identifier" = aws_db_instance.get_started_rds_postgres_instance.identifier
     },
     {
-      "Address" = aws_db_instance.get_started_rds_postgres_instance.address
+      "Host" = aws_db_instance.get_started_rds_postgres_instance.address
     },
     {
       "Port" = aws_db_instance.get_started_rds_postgres_instance.port
