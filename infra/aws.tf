@@ -221,45 +221,48 @@ resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSNetworkingPolicy" {
   role       = aws_iam_role.cluster[0].name
 }
 
-### AWS Pod Identity for the runner
-# Install the Pod Identity add-on to the cluster
-resource "aws_eks_addon" "pod_identity" {
-  cluster_name = aws_eks_cluster.get-started[0].name
-  addon_name   = "eks-pod-identity-agent"
+locals {
+  oidc_provider = split("/", aws_eks_cluster.get-started[0].identity[0].oidc[0].issuer)[4]
 }
 
+### Set up IRSA for the runner
 # Policy document for Pod Identity
 data "aws_iam_policy_document" "assume_role" {
+  version = "2012-10-17"
   statement {
-    sid    = "AllowEksAuthToAssumeRoleForPodIdentity"
     effect = "Allow"
     principals {
-      type        = "Service"
-      identifiers = ["pods.eks.amazonaws.com"]
+      type        = "Federated"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${local.oidc_provider}"]
     }
     actions = [
-      "sts:AssumeRole",
-      "sts:TagSession"
+      "sts:AssumeRoleWithWebIdentity"
     ]
+    condition {
+      test     = "StringEquals"
+      variable = "${local.oidc_provider}:aud"
+      values = [
+        "sts.amazonaws.com"
+      ]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "${local.oidc_provider}:sub"
+      values = [
+        "system:serviceaccount:humanitec-kubernetes-agent-runner:humanitec-kubernetes-agent-runner"
+      ]
+    }
   }
 }
 
 # IAM role for the runner
-resource "aws_iam_role" "agent_runner_workload_identity_role" {
+resource "aws_iam_role" "agent_runner_irsa_role" {
   name               = "get-started-humanitec-kubernetes-agent-runner"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 # IAM role policy attachment to a built-in role
 resource "aws_iam_role_policy_attachment" "agent_runner_manage_rds" {
-  role       = aws_iam_role.agent_runner_workload_identity_role.name
+  role       = aws_iam_role.agent_runner_irsa_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
-}
-
-# EKS Pod Identity association for the agent runner service account to the IAM role
-resource "aws_eks_pod_identity_association" "agent_runner" {
-  cluster_name    = aws_eks_cluster.get-started[0].name
-  namespace       = kubernetes_namespace.humanitec_kubernetes_agent_runner.metadata[0].name
-  service_account = "humanitec-kubernetes-agent-runner"
-  role_arn        = aws_iam_role.agent_runner_workload_identity_role.arn
 }
