@@ -1,5 +1,4 @@
 # Module for creating a simple default RDS PostgreSQL database
-
 terraform {
   required_providers {
     aws = {
@@ -12,14 +11,11 @@ terraform {
     }
   }
 }
-
 locals {
   db_name     = "get_started"
   db_username = "get_started"
 }
-
 data "aws_region" "current" {}
-
 resource "random_string" "db_password" {
   length  = 12
   lower   = true
@@ -27,7 +23,6 @@ resource "random_string" "db_password" {
   numeric = true
   special = false
 }
-
 resource "aws_db_instance" "get_started_rds_postgres_instance" {
   allocated_storage        = 5
   engine                   = "postgres"
