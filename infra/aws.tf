@@ -270,8 +270,14 @@ resource "aws_iam_role" "agent_runner_irsa_role" {
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
-# IAM role policy attachment to a built-in role
+# Assign a built-in role to the runner to manage RDS instances
 resource "aws_iam_role_policy_attachment" "agent_runner_manage_rds" {
   role       = aws_iam_role.agent_runner_irsa_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonRDSFullAccess"
+}
+
+# Assign a built-in role to the runner to manage EC2 (required for security group rule for PostgreSQL access)
+resource "aws_iam_role_policy_attachment" "agent_runner_manage_ec2" {
+  role       = aws_iam_role.agent_runner_irsa_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
 }
