@@ -222,7 +222,7 @@ resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSNetworkingPolicy" {
 }
 
 locals {
-  oidc_provider = split("/", aws_eks_cluster.get-started[0].identity[0].oidc[0].issuer)[4]
+  oidc_provider = trimprefix(aws_eks_cluster.get-started[0].identity[0].oidc[0].issuer, "https://")
 }
 
 ### Set up IRSA for the runner
