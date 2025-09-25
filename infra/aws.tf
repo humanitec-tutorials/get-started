@@ -221,11 +221,20 @@ resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSNetworkingPolicy" {
   role       = aws_iam_role.cluster[0].name
 }
 
+### Set up IRSA for the runner
 locals {
-  oidc_provider = trimprefix(aws_eks_cluster.get-started[0].identity[0].oidc[0].issuer, "https://")
+  eks_oidc_provider_url = aws_eks_cluster.get-started[0].identity[0].oidc[0].issuer
+  eks_oidc_provider     = trimprefix(aws_eks_cluster.get-started[0].identity[0].oidc[0].issuer, "https://")
 }
 
-### Set up IRSA for the runner
+# OIDC provider
+resource "aws_iam_openid_connect_provider" "get_started" {
+  url = local.eks_oidc_provider_url
+  client_id_list = [
+    "sts.amazonaws.com"
+  ]
+}
+
 # Policy document for Pod Identity
 data "aws_iam_policy_document" "assume_role" {
   version = "2012-10-17"
@@ -233,21 +242,21 @@ data "aws_iam_policy_document" "assume_role" {
     effect = "Allow"
     principals {
       type        = "Federated"
-      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${local.oidc_provider}"]
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${local.eks_oidc_provider}"]
     }
     actions = [
       "sts:AssumeRoleWithWebIdentity"
     ]
     condition {
       test     = "StringEquals"
-      variable = "${local.oidc_provider}:aud"
+      variable = "${local.eks_oidc_provider}:aud"
       values = [
         "sts.amazonaws.com"
       ]
     }
     condition {
       test     = "StringEquals"
-      variable = "${local.oidc_provider}:sub"
+      variable = "${local.eks_oidc_provider}:sub"
       values = [
         "system:serviceaccount:humanitec-kubernetes-agent-runner:humanitec-kubernetes-agent-runner"
       ]
