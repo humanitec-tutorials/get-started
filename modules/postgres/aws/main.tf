@@ -43,3 +43,13 @@ resource "aws_db_instance" "get_started_rds_postgres_instance" {
   multi_az                 = false
   dedicated_log_volume     = false
 }
+
+# Need to open access to the database port via a security rule despite "publicly_accessible"
+resource "aws_security_group_rule" "get_started_postgres_access" {
+  type              = "ingress"
+  from_port         = aws_db_instance.get_started_rds_postgres_instance.port
+  to_port           = aws_db_instance.get_started_rds_postgres_instance.port
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = tolist(aws_db_instance.get_started_rds_postgres_instance.vpc_security_group_ids)[0]
+}
