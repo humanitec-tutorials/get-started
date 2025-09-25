@@ -31,6 +31,13 @@ resource "kubernetes_deployment" "simple" {
         container {
           image = var.image
           name  = "main"
+          dynamic "env" {
+            for_each = var.variables
+            content {
+              name  = env.key
+              value = env.value
+            }
+          }
         }
       }
     }

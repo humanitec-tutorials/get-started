@@ -7,3 +7,8 @@ variable "namespace" {
 variable "image" {
   description = "Image to use for the workload"
 }
+variable "variables" {
+  description = "Container environment variables"
+  type        = map(string)
+  default     = {}
+}
