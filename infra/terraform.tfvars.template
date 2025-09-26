@@ -16,9 +16,6 @@ enabled_cloud_provider = "..."
 # AWS region for resources, e.g. "eu-north-1"
 aws_region = "..."
 
-# Your AWS profile name (optional - uses default if not specified)
-# aws_profile = "..."
-
 # ================================
 # GCP configuration (if using GCP)
 # ================================
