@@ -10,3 +10,9 @@ variable "gcp_project_id" {
 variable "gcp_region" {
   description = "GCP region for resources"
 }
+variable "orchestrator_org" {
+  description = "Ochestrator organization ID"
+}
+variable "orchestrator_auth_token" {
+  description = "Orchestrator auth token"
+}

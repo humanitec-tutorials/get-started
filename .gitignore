@@ -40,5 +40,5 @@ terraform.rc
 # Ignore key files
 *.pem
 
-# Local manifests directory
+# Local directories created via the tutorial flow
 manifests/

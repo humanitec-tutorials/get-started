@@ -6,21 +6,8 @@ terraform {
     }
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5"
+      version = "~> 6"
     }
-    
-    # Added through tutorial
-    platform-orchestrator = {
-      source  = "humanitec/platform-orchestrator"
-      version = "~> 2"
-    }
+    required_version = ">= 1.12.0"
   }
-}
-
-# Added through tutorial
-# Configure the Platform Orchestrator provider
-provider "platform-orchestrator" {
-  org_id     = var.orchestrator_org
-  auth_token = var.orchestrator_auth_token
-  api_url    = "https://api.humanitec.dev"
 }
