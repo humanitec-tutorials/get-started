@@ -126,22 +126,6 @@ resource "aws_eks_cluster" "get-started" {
   ]
 }
 
-resource "aws_eks_access_entry" "access" {
-  cluster_name  = aws_eks_cluster.get-started[0].name
-  principal_arn = data.aws_caller_identity.current.arn
-  type          = "STANDARD"
-}
-
-resource "aws_eks_access_policy_association" "admin" {
-  cluster_name  = aws_eks_cluster.get-started[0].name
-  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
-  principal_arn = data.aws_caller_identity.current.arn
-
-  access_scope {
-    type = "cluster"
-  }
-}
-
 resource "aws_iam_role" "node" {
   count = local.create_aws ? 1 : 0
   name  = "eks-auto-node-example"
