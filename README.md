@@ -1,5 +1,5 @@
 # Get started
 
-This repository contains the backing material for the upcomfing "[Get started]" Platform Orchestrator tutorial.
+This repository contains the backing material for the "[Get started](https://developer.humanitec.com/platform-orchestrator/docs/tutorial/get-started)" Platform Orchestrator tutorial.
 
-ℹ️ It is currently a work-in-progress and subject to major change.
+Please refer to the tutorial page for all usage instructions.
